@@ -7,7 +7,7 @@ import (
 	"github.com/tristanscholten/kube-priority/internal/config"
 	"github.com/tristanscholten/kube-priority/internal/priorityclass"
 	"github.com/tristanscholten/kube-priority/internal/resource"
-	"k8s.io/apimachinery/pkg/apis/meta/v1/unstructured"
+	"sigs.k8s.io/controller-runtime/pkg/client"
 )
 
 type Result struct {
@@ -18,8 +18,8 @@ type Result struct {
 	Preserved bool
 }
 
-func Evaluate(u *unstructured.Unstructured, spec resource.KindSpec, opts config.Options) (Result, error) {
-	ann := u.GetAnnotations()
+func Evaluate(obj client.Object, spec resource.KindSpec, opts config.Options) (Result, error) {
+	ann := obj.GetAnnotations()
 	raw, ok := ann[opts.AnnotationKey]
 	if !ok {
 		return Result{}, nil
@@ -32,7 +32,7 @@ func Evaluate(u *unstructured.Unstructured, spec resource.KindSpec, opts config.
 	if err != nil {
 		return Result{Annotated: true}, err
 	}
-	current, exists, err := resource.CurrentPriorityClassName(u, spec)
+	current, exists, err := resource.CurrentPriorityClassName(obj, spec)
 	if err != nil {
 		return Result{Annotated: true}, err
 	}

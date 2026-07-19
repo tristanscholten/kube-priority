@@ -9,15 +9,14 @@ import (
 
 	"github.com/go-logr/logr"
 	"github.com/tristanscholten/kube-priority/internal/config"
+	"github.com/tristanscholten/kube-priority/internal/mutation"
 	"github.com/tristanscholten/kube-priority/internal/priorityclass"
 	"github.com/tristanscholten/kube-priority/internal/resource"
 	"github.com/tristanscholten/kube-priority/internal/validation"
 	schedulingv1 "k8s.io/api/scheduling/v1"
 	apierrors "k8s.io/apimachinery/pkg/api/errors"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
-	"k8s.io/apimachinery/pkg/apis/meta/v1/unstructured"
 	"k8s.io/apimachinery/pkg/runtime"
-	"k8s.io/apimachinery/pkg/runtime/schema"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 	ctrladmission "sigs.k8s.io/controller-runtime/pkg/webhook/admission"
 )
@@ -33,20 +32,18 @@ func (h *Handler) Handle(ctx context.Context, req ctrladmission.Request) ctrladm
 	if len(req.Object.Raw) == 0 {
 		return ctrladmission.Errored(http.StatusBadRequest, fmt.Errorf("empty admission object"))
 	}
-	u := &unstructured.Unstructured{}
-	if err := json.Unmarshal(req.Object.Raw, &u.Object); err != nil {
-		return ctrladmission.Errored(http.StatusBadRequest, fmt.Errorf("malformed object: %w", err))
-	}
-	gvk := schema.GroupVersionKind{Group: req.Kind.Group, Version: req.Kind.Version, Kind: req.Kind.Kind}
-	u.SetGroupVersionKind(gvk)
-	spec, ok := resource.ByGVK(gvk)
+	spec, ok := resource.ByAdmissionKind(req.Kind.Group, req.Kind.Version, req.Kind.Kind)
 	if !ok || req.SubResource != "" {
 		return ctrladmission.Allowed("unsupported kind or subresource ignored")
 	}
-	if _, excluded := h.Opts.ExcludedNamespaces()[u.GetNamespace()]; excluded {
+	obj := spec.NewObject()
+	if err := json.Unmarshal(req.Object.Raw, obj); err != nil {
+		return ctrladmission.Errored(http.StatusBadRequest, fmt.Errorf("malformed %s: %w", spec.Kind, err))
+	}
+	if _, excluded := h.Opts.ExcludedNamespaces()[obj.GetNamespace()]; excluded {
 		return ctrladmission.Allowed("namespace excluded")
 	}
-	res, err := validation.Evaluate(u, spec, h.Opts)
+	res, err := validation.Evaluate(obj, spec, h.Opts)
 	if err != nil {
 		return ctrladmission.Denied(err.Error())
 	}
@@ -54,41 +51,35 @@ func (h *Handler) Handle(ctx context.Context, req ctrladmission.Request) ctrladm
 		return ctrladmission.Allowed("no mutation required")
 	}
 	if h.Mode == "validate" {
-		if err := h.validatePriorityClassReadiness(ctx, gvk, res); err != nil {
+		if err := h.validatePriorityClassReadiness(ctx, spec, res); err != nil {
 			return ctrladmission.Denied(err.Error())
 		}
 		return ctrladmission.Allowed("valid kube-priority annotation")
 	}
-	current, exists, err := resource.CurrentPriorityClassName(u, spec)
+	changed, err := mutation.MutatePriority(obj, spec, res.ClassName)
 	if err != nil {
 		return ctrladmission.Errored(http.StatusBadRequest, err)
 	}
-	if exists && current == res.ClassName {
+	if !changed {
 		return ctrladmission.Allowed("already mutated")
 	}
-	if err := resource.SetPriorityClassName(u, spec, res.ClassName); err != nil {
-		return ctrladmission.Errored(http.StatusBadRequest, err)
-	}
-	ann := u.GetAnnotations()
-	if ann == nil {
-		ann = map[string]string{}
-	}
-	ann[priorityclass.ManagedPriorityClassAnnotation] = res.ClassName
-	u.SetAnnotations(ann)
-	mutated, err := json.Marshal(u.Object)
+	mutated, changed, err := mutation.RawPatch(req.Object.Raw, obj)
 	if err != nil {
 		return ctrladmission.Errored(http.StatusInternalServerError, err)
+	}
+	if !changed {
+		return ctrladmission.Allowed("already mutated")
 	}
 	resp := ctrladmission.PatchResponseFromRaw(req.Object.Raw, mutated)
 	resp.AuditAnnotations = map[string]string{"kube-priority.hstr.nl/mutated": "true"}
 	return resp
 }
 
-func (h *Handler) validatePriorityClassReadiness(ctx context.Context, gvk schema.GroupVersionKind, res validation.Result) error {
+func (h *Handler) validatePriorityClassReadiness(ctx context.Context, spec resource.KindSpec, res validation.Result) error {
 	pc := &schedulingv1.PriorityClass{}
 	if err := h.Client.Get(ctx, client.ObjectKey{Name: res.ClassName}, pc); err != nil {
 		if apierrors.IsNotFound(err) {
-			if gvk.Kind == "Pod" {
+			if spec.Kind == "Pod" {
 				return fmt.Errorf("PriorityClass %q does not exist yet; retry after it is created or annotate a supported controller resource so kube-priority can provision it", res.ClassName)
 			}
 			return nil
