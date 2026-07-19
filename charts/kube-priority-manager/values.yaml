@@ -1,0 +1,27 @@
+replicaCount: 2
+image:
+  repository: ghcr.io/tristanscholten/kube-priority-manager
+  tag: latest
+  pullPolicy: IfNotPresent
+manager:
+  annotationKey: kube-priority.hstr.nl
+  minimumPriority: -2147483648
+  maximumPriorityExclusive: 1000000000
+  preemptionPolicy: PreemptLowerPriority
+  conflictPolicy: reject
+  annotationRemovalPolicy: retain
+  enablePriorityClassGC: false
+  priorityClassGCGracePeriod: 24h
+  webhookFailurePolicy: Fail
+  excludedNamespaces: kube-system,kube-priority-manager-system
+resources:
+  requests:
+    cpu: 20m
+    memory: 64Mi
+  limits:
+    cpu: 500m
+    memory: 128Mi
+certManager:
+  enabled: true
+pdb:
+  enabled: true

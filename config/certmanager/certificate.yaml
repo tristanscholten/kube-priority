@@ -1,0 +1,21 @@
+apiVersion: cert-manager.io/v1
+kind: Issuer
+metadata:
+  name: kube-priority-manager-selfsigned
+  namespace: kube-priority-manager-system
+spec:
+  selfSigned: {}
+---
+apiVersion: cert-manager.io/v1
+kind: Certificate
+metadata:
+  name: kube-priority-manager-serving-cert
+  namespace: kube-priority-manager-system
+spec:
+  secretName: kube-priority-manager-webhook-server-cert
+  dnsNames:
+    - kube-priority-manager-webhook.kube-priority-manager-system.svc
+    - kube-priority-manager-webhook.kube-priority-manager-system.svc.cluster.local
+  issuerRef:
+    name: kube-priority-manager-selfsigned
+    kind: Issuer

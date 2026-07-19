@@ -1,0 +1,22 @@
+name: Kind E2E
+on:
+  pull_request:
+    branches: [main]
+  push:
+    branches: [main]
+  workflow_dispatch:
+jobs:
+  e2e:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    steps:
+      - uses: actions/checkout@v5
+      - uses: actions/setup-go@v6
+        with:
+          go-version-file: go.mod
+          cache: true
+      - uses: helm/kind-action@v1.12.0
+        with:
+          cluster_name: kube-priority-manager
+      - run: go test ./test/e2e -count=1 -timeout=20m

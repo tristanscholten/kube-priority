@@ -1,0 +1,74 @@
+apiVersion: admissionregistration.k8s.io/v1
+kind: MutatingWebhookConfiguration
+metadata:
+  name: kube-priority-manager-mutating
+  annotations:
+    cert-manager.io/inject-ca-from: {{ include "kube-priority-manager.namespace" . }}/kube-priority-manager-serving-cert
+webhooks:
+  - name: mutate.kube-priority.hstr.nl
+    admissionReviewVersions: ["v1"]
+    sideEffects: None
+    timeoutSeconds: 5
+    failurePolicy: {{ .Values.manager.webhookFailurePolicy }}
+    reinvocationPolicy: IfNeeded
+    clientConfig:
+      service:
+        namespace: {{ include "kube-priority-manager.namespace" . }}
+        name: kube-priority-manager-webhook
+        path: /mutate
+        port: 443
+    namespaceSelector:
+      matchExpressions:
+        - key: kubernetes.io/metadata.name
+          operator: NotIn
+          values: ["kube-system", {{ include "kube-priority-manager.namespace" . | quote }}]
+    rules:
+      - operations: ["CREATE", "UPDATE"]
+        apiGroups: [""]
+        apiVersions: ["v1"]
+        resources: ["pods", "replicationcontrollers"]
+      - operations: ["CREATE", "UPDATE"]
+        apiGroups: ["apps"]
+        apiVersions: ["v1"]
+        resources: ["deployments", "statefulsets", "daemonsets", "replicasets"]
+      - operations: ["CREATE", "UPDATE"]
+        apiGroups: ["batch"]
+        apiVersions: ["v1"]
+        resources: ["jobs", "cronjobs"]
+---
+apiVersion: admissionregistration.k8s.io/v1
+kind: ValidatingWebhookConfiguration
+metadata:
+  name: kube-priority-manager-validating
+  annotations:
+    cert-manager.io/inject-ca-from: {{ include "kube-priority-manager.namespace" . }}/kube-priority-manager-serving-cert
+webhooks:
+  - name: validate.kube-priority.hstr.nl
+    admissionReviewVersions: ["v1"]
+    sideEffects: None
+    timeoutSeconds: 5
+    failurePolicy: {{ .Values.manager.webhookFailurePolicy }}
+    clientConfig:
+      service:
+        namespace: {{ include "kube-priority-manager.namespace" . }}
+        name: kube-priority-manager-webhook
+        path: /validate
+        port: 443
+    namespaceSelector:
+      matchExpressions:
+        - key: kubernetes.io/metadata.name
+          operator: NotIn
+          values: ["kube-system", {{ include "kube-priority-manager.namespace" . | quote }}]
+    rules:
+      - operations: ["CREATE", "UPDATE"]
+        apiGroups: [""]
+        apiVersions: ["v1"]
+        resources: ["pods", "replicationcontrollers"]
+      - operations: ["CREATE", "UPDATE"]
+        apiGroups: ["apps"]
+        apiVersions: ["v1"]
+        resources: ["deployments", "statefulsets", "daemonsets", "replicasets"]
+      - operations: ["CREATE", "UPDATE"]
+        apiGroups: ["batch"]
+        apiVersions: ["v1"]
+        resources: ["jobs", "cronjobs"]
