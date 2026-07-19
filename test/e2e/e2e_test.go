@@ -26,15 +26,14 @@ func TestKindDeploymentAnnotation(t *testing.T) {
 	}
 	if _, err := exec.LookPath("docker"); err == nil {
 		//nolint:gosec // Test harness invokes trusted local docker binary with a test image tag.
-		_ = exec.Command("docker", "build", "-t", img, ".").Run()
+		_ = exec.Command("docker", "build", "-t", img, "../..").Run()
 	}
 	if _, err := exec.LookPath("kind"); err == nil {
 		//nolint:gosec // Test harness invokes trusted local kind binary with a test image tag.
 		_ = exec.Command("kind", "load", "docker-image", img).Run()
 	}
 
-	run(t, "kubectl", "apply", "-k", "../../config/default")
-	run(t, "kubectl", "-n", "kube-priority-manager-system", "set", "image", "deploy/kube-priority-manager", "manager="+img)
+	applyKustomizeWithImage(t, img)
 	run(t, "kubectl", "-n", "kube-priority-manager-system", "rollout", "status", "deploy/kube-priority-manager", "--timeout=180s")
 
 	manifest := `apiVersion: apps/v1
@@ -68,6 +67,21 @@ spec:
 		time.Sleep(2 * time.Second)
 	}
 	t.Fatalf("priorityClassName not set")
+}
+
+func applyKustomizeWithImage(t *testing.T, img string) {
+	t.Helper()
+	out, err := exec.Command("kubectl", "kustomize", "../../config/default").CombinedOutput()
+	if err != nil {
+		t.Fatalf("kubectl kustomize: %v\n%s", err, out)
+	}
+	manifest := strings.ReplaceAll(string(out), "ghcr.io/tristanscholten/kube-priority-manager:latest", img)
+	cmd := exec.Command("kubectl", "apply", "-f", "-")
+	cmd.Stdin = strings.NewReader(manifest)
+	applyOut, err := cmd.CombinedOutput()
+	if err != nil {
+		t.Fatalf("kubectl apply rendered manifests: %v\n%s", err, applyOut)
+	}
 }
 
 func run(t *testing.T, name string, args ...string) {
