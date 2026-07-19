@@ -22,7 +22,7 @@ func TestKindDeploymentAnnotation(t *testing.T) {
 
 	img := os.Getenv("E2E_IMAGE")
 	if img == "" {
-		img = "kube-priority-manager:local"
+		img = "kube-priority:local"
 	}
 	if _, err := exec.LookPath("docker"); err == nil {
 		run(t, "docker", "build", "-t", img, "../..")
@@ -32,7 +32,7 @@ func TestKindDeploymentAnnotation(t *testing.T) {
 	}
 
 	applyKustomizeWithImage(t, img)
-	rollout := exec.Command("kubectl", "-n", "kube-priority-manager-system", "rollout", "status", "deploy/kube-priority-manager", "--timeout=180s")
+	rollout := exec.Command("kubectl", "-n", "kube-priority-system", "rollout", "status", "deploy/kube-priority", "--timeout=180s")
 	if out, err := rollout.CombinedOutput(); err != nil {
 		dumpDebug(t)
 		t.Fatalf("rollout: %v\n%s", err, out)
@@ -92,9 +92,9 @@ func loadKindImage(t *testing.T, img string) {
 func dumpDebug(t *testing.T) {
 	t.Helper()
 	for _, args := range [][]string{
-		{"-n", "kube-priority-manager-system", "get", "pods,deploy,rs,svc,secret,cert,issuer", "-o", "wide"},
-		{"-n", "kube-priority-manager-system", "get", "events", "--sort-by=.lastTimestamp"},
-		{"-n", "kube-priority-manager-system", "logs", "deploy/kube-priority-manager", "--all-containers=true", "--tail=100"},
+		{"-n", "kube-priority-system", "get", "pods,deploy,rs,svc,secret,cert,issuer", "-o", "wide"},
+		{"-n", "kube-priority-system", "get", "events", "--sort-by=.lastTimestamp"},
+		{"-n", "kube-priority-system", "logs", "deploy/kube-priority", "--all-containers=true", "--tail=100"},
 	} {
 		//nolint:gosec // Test debug helper invokes trusted local kubectl binary with fixed commands.
 		out, _ := exec.Command("kubectl", args...).CombinedOutput()
@@ -108,7 +108,7 @@ func applyKustomizeWithImage(t *testing.T, img string) {
 	if err != nil {
 		t.Fatalf("kubectl kustomize: %v\n%s", err, out)
 	}
-	manifest := strings.ReplaceAll(string(out), "ghcr.io/tristanscholten/kube-priority-manager:latest", img)
+	manifest := strings.ReplaceAll(string(out), "ghcr.io/tristanscholten/kube-priority:latest", img)
 	cmd := exec.Command("kubectl", "apply", "-f", "-")
 	cmd.Stdin = strings.NewReader(manifest)
 	applyOut, err := cmd.CombinedOutput()

@@ -1,9 +1,9 @@
 apiVersion: admissionregistration.k8s.io/v1
 kind: MutatingWebhookConfiguration
 metadata:
-  name: kube-priority-manager-mutating
+  name: kube-priority-mutating
   annotations:
-    cert-manager.io/inject-ca-from: kube-priority-manager-system/kube-priority-manager-serving-cert
+    cert-manager.io/inject-ca-from: kube-priority-system/kube-priority-serving-cert
 webhooks:
   - name: mutate.kube-priority.hstr.nl
     admissionReviewVersions: ["v1"]
@@ -13,15 +13,15 @@ webhooks:
     reinvocationPolicy: IfNeeded
     clientConfig:
       service:
-        namespace: kube-priority-manager-system
-        name: kube-priority-manager-webhook
+        namespace: kube-priority-system
+        name: kube-priority-webhook
         path: /mutate
         port: 443
     namespaceSelector:
       matchExpressions:
         - key: kubernetes.io/metadata.name
           operator: NotIn
-          values: ["kube-system", "kube-priority-manager-system"]
+          values: ["kube-system", "kube-priority-system"]
     rules:
       - operations: ["CREATE", "UPDATE"]
         apiGroups: [""]

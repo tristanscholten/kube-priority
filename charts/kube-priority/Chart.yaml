@@ -1,12 +1,12 @@
 apiVersion: v2
-name: kube-priority-manager
+name: kube-priority
 description: Mutating and validating webhook plus controller for annotation-driven Kubernetes PriorityClasses.
 type: application
 version: 0.1.0
 appVersion: "0.1.0"
-home: https://github.com/tristanscholten/kube-priority-manager
+home: https://github.com/tristanscholten/kube-priority
 sources:
-  - https://github.com/tristanscholten/kube-priority-manager
+  - https://github.com/tristanscholten/kube-priority
 keywords:
   - kubernetes
   - priorityclass

@@ -3,5 +3,5 @@ kind: Kustomization
 resources:
   - all.yaml
 images:
-  - name: ghcr.io/tristanscholten/kube-priority-manager
+  - name: ghcr.io/tristanscholten/kube-priority
     newTag: latest

@@ -6,12 +6,12 @@ import (
 	"time"
 
 	"github.com/go-logr/logr"
-	"github.com/tristanscholten/kube-priority-manager/internal/config"
-	"github.com/tristanscholten/kube-priority-manager/internal/events"
-	"github.com/tristanscholten/kube-priority-manager/internal/metrics"
-	"github.com/tristanscholten/kube-priority-manager/internal/priorityclass"
-	"github.com/tristanscholten/kube-priority-manager/internal/resource"
-	"github.com/tristanscholten/kube-priority-manager/internal/validation"
+	"github.com/tristanscholten/kube-priority/internal/config"
+	"github.com/tristanscholten/kube-priority/internal/events"
+	"github.com/tristanscholten/kube-priority/internal/metrics"
+	"github.com/tristanscholten/kube-priority/internal/priorityclass"
+	"github.com/tristanscholten/kube-priority/internal/resource"
+	"github.com/tristanscholten/kube-priority/internal/validation"
 	corev1 "k8s.io/api/core/v1"
 	schedulingv1 "k8s.io/api/scheduling/v1"
 	apierrors "k8s.io/apimachinery/pkg/api/errors"
@@ -148,7 +148,7 @@ func (r *Reconciler) ensurePriorityClass(ctx context.Context, value int32) error
 		return fmt.Errorf("PriorityClass %q has value %d, expected %d", pc.Name, pc.Value, value)
 	}
 	if !priorityclass.IsManaged(pc) {
-		return fmt.Errorf("PriorityClass %q exists but is not managed by kube-priority-manager", pc.Name)
+		return fmt.Errorf("PriorityClass %q exists but is not managed by kube-priority", pc.Name)
 	}
 	return nil
 }
@@ -164,7 +164,7 @@ func SetupAll(mgr ctrl.Manager, opts config.Options, log logr.Logger) error {
 
 func SetupOne(mgr ctrl.Manager, opts config.Options, log logr.Logger, spec resource.KindSpec) error {
 	//nolint:staticcheck // client-go EventRecorder is still used here for broad typed/unstructured Event emission.
-	r := &Reconciler{Client: mgr.GetClient(), Scheme: mgr.GetScheme(), Recorder: mgr.GetEventRecorderFor("kube-priority-manager"), Spec: spec, Opts: opts, Log: log.WithName("controller")}
+	r := &Reconciler{Client: mgr.GetClient(), Scheme: mgr.GetScheme(), Recorder: mgr.GetEventRecorderFor("kube-priority"), Spec: spec, Opts: opts, Log: log.WithName("controller")}
 	c, err := controller.New("kube-priority-"+spec.Resource, mgr, controller.Options{Reconciler: r})
 	if err != nil {
 		return err

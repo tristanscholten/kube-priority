@@ -1,7 +1,7 @@
 package mutation
 
 import (
-	"github.com/tristanscholten/kube-priority-manager/internal/resource"
+	"github.com/tristanscholten/kube-priority/internal/resource"
 	"k8s.io/apimachinery/pkg/apis/meta/v1/unstructured"
 	"k8s.io/apimachinery/pkg/runtime/schema"
 	"strings"

@@ -19,4 +19,4 @@ RBAC note: PriorityClass delete is not granted by default. If `--enable-priority
 Certificate options:
 
 1. **cert-manager** — default manifests include an Issuer and Certificate with CA injection annotations.
-2. **Without cert-manager** — create a TLS Secret named `kube-priority-manager-webhook-server-cert` containing `tls.crt` and `tls.key`, and inject the CA bundle into both webhook configurations using your GitOps/cert rotation system.
+2. **Without cert-manager** — create a TLS Secret named `kube-priority-webhook-server-cert` containing `tls.crt` and `tls.key`, and inject the CA bundle into both webhook configurations using your GitOps/cert rotation system.

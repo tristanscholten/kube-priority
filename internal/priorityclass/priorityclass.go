@@ -11,7 +11,7 @@ import (
 )
 
 const (
-	AppName                        = "kube-priority-manager"
+	AppName                        = "kube-priority"
 	ManagedLabel                   = "kube-priority.hstr.nl/managed"
 	ValueAnnotation                = "kube-priority.hstr.nl/value"
 	ManagedPriorityClassAnnotation = "kube-priority.hstr.nl/managed-priority-class"
@@ -54,7 +54,7 @@ func Build(value int32, preemption corev1.PreemptionPolicy) (*schedulingv1.Prior
 		Value:            value,
 		GlobalDefault:    false,
 		PreemptionPolicy: &preemption,
-		Description:      fmt.Sprintf("Managed by kube-priority-manager for priority value %d", value),
+		Description:      fmt.Sprintf("Managed by kube-priority for priority value %d", value),
 	}, nil
 }
 

@@ -21,10 +21,10 @@ import (
 	"sigs.k8s.io/controller-runtime/pkg/webhook"
 	"sigs.k8s.io/controller-runtime/pkg/webhook/admission"
 
-	priorityadmission "github.com/tristanscholten/kube-priority-manager/internal/admission"
-	"github.com/tristanscholten/kube-priority-manager/internal/config"
-	prioritycontroller "github.com/tristanscholten/kube-priority-manager/internal/controller"
-	prioritymetrics "github.com/tristanscholten/kube-priority-manager/internal/metrics"
+	priorityadmission "github.com/tristanscholten/kube-priority/internal/admission"
+	"github.com/tristanscholten/kube-priority/internal/config"
+	prioritycontroller "github.com/tristanscholten/kube-priority/internal/controller"
+	prioritymetrics "github.com/tristanscholten/kube-priority/internal/metrics"
 )
 
 var scheme = runtime.NewScheme()
@@ -50,7 +50,7 @@ func main() {
 	flag.BoolVar(&opts.EnablePriorityClassGC, "enable-priorityclass-gc", false, "Enable safe optional managed PriorityClass garbage collection. Disabled by default.")
 	flag.DurationVar(&opts.PriorityClassGCGracePeriod, "priorityclass-gc-grace-period", 24*time.Hour, "Grace period for optional managed PriorityClass garbage collection.")
 	flag.StringVar(&opts.WebhookFailurePolicy, "webhook-failure-policy", opts.WebhookFailurePolicy, "Documented failurePolicy for rendered manifests: Fail or Ignore.")
-	flag.StringVar(&opts.ExcludedNamespacesCSV, "excluded-namespaces", opts.ExcludedNamespacesCSV+",kube-priority-manager-system", "Comma-separated namespaces to ignore.")
+	flag.StringVar(&opts.ExcludedNamespacesCSV, "excluded-namespaces", opts.ExcludedNamespacesCSV+",kube-priority-system", "Comma-separated namespaces to ignore.")
 	flag.StringVar(&metricsAddr, "metrics-bind-address", ":8080", "Metrics bind address.")
 	flag.StringVar(&probeAddr, "health-probe-bind-address", ":8081", "Health probe bind address.")
 	flag.BoolVar(&leaderElect, "leader-elect", true, "Enable leader election for controller manager.")
@@ -75,7 +75,7 @@ func main() {
 		}),
 		HealthProbeBindAddress: probeAddr,
 		LeaderElection:         leaderElect,
-		LeaderElectionID:       "kube-priority-manager.hstr.nl",
+		LeaderElectionID:       "kube-priority.hstr.nl",
 	})
 	if err != nil {
 		log.Error(err, "unable to start manager")

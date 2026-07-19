@@ -4,7 +4,7 @@
 
 ```bash
 kubectl apply -k config/default
-kubectl -n kube-priority-manager-system rollout status deploy/kube-priority-manager
+kubectl -n kube-priority-system rollout status deploy/kube-priority
 ```
 
 ## Verify

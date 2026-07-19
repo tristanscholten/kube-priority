@@ -1,6 +1,6 @@
 <div align="center">
 
-# ⚡ kube-priority-manager
+# ⚡ kube-priority
 
 **Annotation-driven Kubernetes Pod priority, backed by managed PriorityClasses.**
 
@@ -8,7 +8,7 @@
 [![Kubernetes](https://img.shields.io/badge/Kubernetes-1.34+-326CE5?logo=kubernetes&logoColor=white)](https://kubernetes.io)
 [![controller-runtime](https://img.shields.io/badge/controller--runtime-v0.24-blue)](https://github.com/kubernetes-sigs/controller-runtime)
 [![License](https://img.shields.io/badge/license-Apache--2.0-green.svg)](LICENSE)
-[![CI](https://github.com/tristanscholten/kube-priority-manager/actions/workflows/test.yml/badge.svg)](https://github.com/tristanscholten/kube-priority-manager/actions)
+[![CI](https://github.com/tristanscholten/kube-priority/actions/workflows/test.yml/badge.svg)](https://github.com/tristanscholten/kube-priority/actions)
 
 </div>
 
@@ -24,7 +24,7 @@ metadata:
     kube-priority.hstr.nl: "500000"
 ```
 
-kube-priority-manager will:
+kube-priority will:
 
 1. validate the value;
 2. generate a deterministic cluster-scoped `PriorityClass`;
@@ -37,15 +37,15 @@ kube-priority-manager will:
 
 ```bash
 kubectl apply -k config/default
-kubectl -n kube-priority-manager-system rollout status deploy/kube-priority-manager
+kubectl -n kube-priority-system rollout status deploy/kube-priority
 kubectl apply -f config/samples/supported-resources.yaml
 ```
 
 Or with Helm:
 
 ```bash
-helm install kube-priority-manager ./charts/kube-priority-manager \
-  --namespace kube-priority-manager-system \
+helm install kube-priority ./charts/kube-priority \
+  --namespace kube-priority-system \
   --create-namespace
 ```
 
@@ -94,15 +94,15 @@ kind: PriorityClass
 metadata:
   name: kube-priority-hstr-nl-750000
   labels:
-    app.kubernetes.io/name: kube-priority-manager
-    app.kubernetes.io/managed-by: kube-priority-manager
+    app.kubernetes.io/name: kube-priority
+    app.kubernetes.io/managed-by: kube-priority
     kube-priority.hstr.nl/managed: "true"
   annotations:
     kube-priority.hstr.nl/value: "750000"
 value: 750000
 globalDefault: false
 preemptionPolicy: PreemptLowerPriority
-description: "Managed by kube-priority-manager for priority value 750000"
+description: "Managed by kube-priority for priority value 750000"
 ```
 
 CronJob uses the deeper field:
@@ -204,7 +204,7 @@ The webhook does not write PriorityClasses in the admission path. Workload templ
 --enable-priorityclass-gc=false
 --priorityclass-gc-grace-period=24h
 --webhook-failure-policy=Fail
---excluded-namespaces=kube-system,kube-priority-manager-system
+--excluded-namespaces=kube-system,kube-priority-system
 --leader-elect=true
 --metrics-bind-address=:8080
 --health-probe-bind-address=:8081
@@ -229,7 +229,7 @@ The webhook does not write PriorityClasses in the admission path. Workload templ
 | Policy | Behavior |
 |---|---|
 | `retain` | default; leave `priorityClassName` untouched |
-| `clear-managed` | clear only when ownership annotation proves kube-priority-manager set it |
+| `clear-managed` | clear only when ownership annotation proves kube-priority set it |
 
 ---
 

@@ -1,4 +1,4 @@
-module github.com/tristanscholten/kube-priority-manager
+module github.com/tristanscholten/kube-priority
 
 go 1.26.5
 

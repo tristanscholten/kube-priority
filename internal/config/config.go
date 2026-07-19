@@ -58,7 +58,7 @@ func Defaults() Options {
 		PriorityClassGCGracePeriod: 24 * time.Hour,
 		WebhookFailurePolicy:       "Fail",
 		ExcludedNamespacesCSV:      "kube-system",
-		ManagerNamespace:           "kube-priority-manager-system",
+		ManagerNamespace:           "kube-priority-system",
 	}
 }
 

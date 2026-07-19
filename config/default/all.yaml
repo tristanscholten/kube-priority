@@ -2,23 +2,23 @@
 apiVersion: v1
 kind: Namespace
 metadata:
-  name: kube-priority-manager-system
+  name: kube-priority-system
   labels:
-    app.kubernetes.io/name: kube-priority-manager
+    app.kubernetes.io/name: kube-priority
     pod-security.kubernetes.io/enforce: restricted
 ---
 apiVersion: v1
 kind: ServiceAccount
 metadata:
-  name: kube-priority-manager
-  namespace: kube-priority-manager-system
+  name: kube-priority
+  namespace: kube-priority-system
   labels:
-    app.kubernetes.io/name: kube-priority-manager
+    app.kubernetes.io/name: kube-priority
 ---
 apiVersion: rbac.authorization.k8s.io/v1
 kind: ClusterRole
 metadata:
-  name: kube-priority-manager
+  name: kube-priority
 rules:
   - apiGroups: ["scheduling.k8s.io"]
     resources: ["priorityclasses"]
@@ -42,26 +42,26 @@ rules:
 apiVersion: rbac.authorization.k8s.io/v1
 kind: ClusterRoleBinding
 metadata:
-  name: kube-priority-manager
+  name: kube-priority
 roleRef:
   apiGroup: rbac.authorization.k8s.io
   kind: ClusterRole
-  name: kube-priority-manager
+  name: kube-priority
 subjects:
   - kind: ServiceAccount
-    name: kube-priority-manager
-    namespace: kube-priority-manager-system
+    name: kube-priority
+    namespace: kube-priority-system
 ---
 apiVersion: v1
 kind: Service
 metadata:
-  name: kube-priority-manager-webhook
-  namespace: kube-priority-manager-system
+  name: kube-priority-webhook
+  namespace: kube-priority-system
   labels:
-    app.kubernetes.io/name: kube-priority-manager
+    app.kubernetes.io/name: kube-priority
 spec:
   selector:
-    app.kubernetes.io/name: kube-priority-manager
+    app.kubernetes.io/name: kube-priority
   ports:
     - name: webhook
       port: 443
@@ -70,13 +70,13 @@ spec:
 apiVersion: v1
 kind: Service
 metadata:
-  name: kube-priority-manager-metrics
-  namespace: kube-priority-manager-system
+  name: kube-priority-metrics
+  namespace: kube-priority-system
   labels:
-    app.kubernetes.io/name: kube-priority-manager
+    app.kubernetes.io/name: kube-priority
 spec:
   selector:
-    app.kubernetes.io/name: kube-priority-manager
+    app.kubernetes.io/name: kube-priority
   ports:
     - name: metrics
       port: 8080
@@ -85,28 +85,28 @@ spec:
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: kube-priority-manager
-  namespace: kube-priority-manager-system
+  name: kube-priority
+  namespace: kube-priority-system
   labels:
-    app.kubernetes.io/name: kube-priority-manager
+    app.kubernetes.io/name: kube-priority
 spec:
   replicas: 2
   selector:
     matchLabels:
-      app.kubernetes.io/name: kube-priority-manager
+      app.kubernetes.io/name: kube-priority
   template:
     metadata:
       labels:
-        app.kubernetes.io/name: kube-priority-manager
+        app.kubernetes.io/name: kube-priority
     spec:
-      serviceAccountName: kube-priority-manager
+      serviceAccountName: kube-priority
       securityContext:
         runAsNonRoot: true
         seccompProfile:
           type: RuntimeDefault
       containers:
         - name: manager
-          image: ghcr.io/tristanscholten/kube-priority-manager:latest
+          image: ghcr.io/tristanscholten/kube-priority:latest
           imagePullPolicy: IfNotPresent
           args:
             - --leader-elect=true
@@ -117,7 +117,7 @@ spec:
             - --conflict-policy=reject
             - --annotation-removal-policy=retain
             - --webhook-failure-policy=Fail
-            - --excluded-namespaces=kube-system,kube-priority-manager-system
+            - --excluded-namespaces=kube-system,kube-priority-system
           ports:
             - name: metrics
               containerPort: 8080
@@ -156,48 +156,48 @@ spec:
       volumes:
         - name: webhook-certs
           secret:
-            secretName: kube-priority-manager-webhook-server-cert
+            secretName: kube-priority-webhook-server-cert
       terminationGracePeriodSeconds: 10
 ---
 apiVersion: policy/v1
 kind: PodDisruptionBudget
 metadata:
-  name: kube-priority-manager
-  namespace: kube-priority-manager-system
+  name: kube-priority
+  namespace: kube-priority-system
 spec:
   minAvailable: 1
   selector:
     matchLabels:
-      app.kubernetes.io/name: kube-priority-manager
+      app.kubernetes.io/name: kube-priority
 ---
 apiVersion: cert-manager.io/v1
 kind: Issuer
 metadata:
-  name: kube-priority-manager-selfsigned
-  namespace: kube-priority-manager-system
+  name: kube-priority-selfsigned
+  namespace: kube-priority-system
 spec:
   selfSigned: {}
 ---
 apiVersion: cert-manager.io/v1
 kind: Certificate
 metadata:
-  name: kube-priority-manager-serving-cert
-  namespace: kube-priority-manager-system
+  name: kube-priority-serving-cert
+  namespace: kube-priority-system
 spec:
-  secretName: kube-priority-manager-webhook-server-cert
+  secretName: kube-priority-webhook-server-cert
   dnsNames:
-    - kube-priority-manager-webhook.kube-priority-manager-system.svc
-    - kube-priority-manager-webhook.kube-priority-manager-system.svc.cluster.local
+    - kube-priority-webhook.kube-priority-system.svc
+    - kube-priority-webhook.kube-priority-system.svc.cluster.local
   issuerRef:
-    name: kube-priority-manager-selfsigned
+    name: kube-priority-selfsigned
     kind: Issuer
 ---
 apiVersion: admissionregistration.k8s.io/v1
 kind: MutatingWebhookConfiguration
 metadata:
-  name: kube-priority-manager-mutating
+  name: kube-priority-mutating
   annotations:
-    cert-manager.io/inject-ca-from: kube-priority-manager-system/kube-priority-manager-serving-cert
+    cert-manager.io/inject-ca-from: kube-priority-system/kube-priority-serving-cert
 webhooks:
   - name: mutate.kube-priority.hstr.nl
     admissionReviewVersions: ["v1"]
@@ -207,15 +207,15 @@ webhooks:
     reinvocationPolicy: IfNeeded
     clientConfig:
       service:
-        namespace: kube-priority-manager-system
-        name: kube-priority-manager-webhook
+        namespace: kube-priority-system
+        name: kube-priority-webhook
         path: /mutate
         port: 443
     namespaceSelector:
       matchExpressions:
         - key: kubernetes.io/metadata.name
           operator: NotIn
-          values: ["kube-system", "kube-priority-manager-system"]
+          values: ["kube-system", "kube-priority-system"]
     rules:
       - operations: ["CREATE", "UPDATE"]
         apiGroups: [""]
@@ -233,9 +233,9 @@ webhooks:
 apiVersion: admissionregistration.k8s.io/v1
 kind: ValidatingWebhookConfiguration
 metadata:
-  name: kube-priority-manager-validating
+  name: kube-priority-validating
   annotations:
-    cert-manager.io/inject-ca-from: kube-priority-manager-system/kube-priority-manager-serving-cert
+    cert-manager.io/inject-ca-from: kube-priority-system/kube-priority-serving-cert
 webhooks:
   - name: validate.kube-priority.hstr.nl
     admissionReviewVersions: ["v1"]
@@ -244,15 +244,15 @@ webhooks:
     failurePolicy: Fail
     clientConfig:
       service:
-        namespace: kube-priority-manager-system
-        name: kube-priority-manager-webhook
+        namespace: kube-priority-system
+        name: kube-priority-webhook
         path: /validate
         port: 443
     namespaceSelector:
       matchExpressions:
         - key: kubernetes.io/metadata.name
           operator: NotIn
-          values: ["kube-system", "kube-priority-manager-system"]
+          values: ["kube-system", "kube-priority-system"]
     rules:
       - operations: ["CREATE", "UPDATE"]
         apiGroups: [""]

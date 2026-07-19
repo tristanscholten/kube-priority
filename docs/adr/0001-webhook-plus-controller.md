@@ -6,7 +6,7 @@ Accepted.
 
 ## Decision
 
-kube-priority-manager implements both admission webhooks and reconcilers.
+kube-priority implements both admission webhooks and reconcilers.
 
 ## Options considered
 
@@ -28,7 +28,7 @@ There is a race between setting `priorityClassName` and the PriorityClass existi
 
 Selected strategy:
 
-- Workload-template resources are admitted and patched; their controller-created Pods may briefly fail until kube-priority-manager creates the PriorityClass. Native Kubernetes controllers retry Pod creation.
+- Workload-template resources are admitted and patched; their controller-created Pods may briefly fail until kube-priority creates the PriorityClass. Native Kubernetes controllers retry Pod creation.
 - Direct Pod requests are rejected by the validating webhook when the required managed PriorityClass does not exist yet, because there is no parent workload object for this controller to reconcile after rejection.
 - Administrators can pre-provision by annotating a workload-template resource, or by creating the managed PriorityClass manifest directly.
 

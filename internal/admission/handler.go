@@ -8,10 +8,10 @@ import (
 	"strings"
 
 	"github.com/go-logr/logr"
-	"github.com/tristanscholten/kube-priority-manager/internal/config"
-	"github.com/tristanscholten/kube-priority-manager/internal/priorityclass"
-	"github.com/tristanscholten/kube-priority-manager/internal/resource"
-	"github.com/tristanscholten/kube-priority-manager/internal/validation"
+	"github.com/tristanscholten/kube-priority/internal/config"
+	"github.com/tristanscholten/kube-priority/internal/priorityclass"
+	"github.com/tristanscholten/kube-priority/internal/resource"
+	"github.com/tristanscholten/kube-priority/internal/validation"
 	schedulingv1 "k8s.io/api/scheduling/v1"
 	apierrors "k8s.io/apimachinery/pkg/api/errors"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
@@ -89,7 +89,7 @@ func (h *Handler) validatePriorityClassReadiness(ctx context.Context, gvk schema
 	if err := h.Client.Get(ctx, client.ObjectKey{Name: res.ClassName}, pc); err != nil {
 		if apierrors.IsNotFound(err) {
 			if gvk.Kind == "Pod" {
-				return fmt.Errorf("PriorityClass %q does not exist yet; retry after it is created or annotate a supported controller resource so kube-priority-manager can provision it", res.ClassName)
+				return fmt.Errorf("PriorityClass %q does not exist yet; retry after it is created or annotate a supported controller resource so kube-priority can provision it", res.ClassName)
 			}
 			return nil
 		}
@@ -102,7 +102,7 @@ func (h *Handler) validatePriorityClassReadiness(ctx context.Context, gvk schema
 		return fmt.Errorf("PriorityClass %q exists with value %d, expected %d", pc.Name, pc.Value, res.Value)
 	}
 	if !priorityclass.IsManaged(pc) {
-		return fmt.Errorf("PriorityClass %q exists but is not managed by kube-priority-manager", pc.Name)
+		return fmt.Errorf("PriorityClass %q exists but is not managed by kube-priority", pc.Name)
 	}
 	return nil
 }

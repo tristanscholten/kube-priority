@@ -3,8 +3,8 @@ package mutation
 import (
 	"encoding/json"
 
-	"github.com/tristanscholten/kube-priority-manager/internal/priorityclass"
-	"github.com/tristanscholten/kube-priority-manager/internal/resource"
+	"github.com/tristanscholten/kube-priority/internal/priorityclass"
+	"github.com/tristanscholten/kube-priority/internal/resource"
 	"k8s.io/apimachinery/pkg/apis/meta/v1/unstructured"
 )
 

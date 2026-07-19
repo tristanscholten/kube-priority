@@ -1,5 +1,5 @@
 SHELL := /usr/bin/env bash
-IMG ?= ghcr.io/tristanscholten/kube-priority-manager:latest
+IMG ?= ghcr.io/tristanscholten/kube-priority:latest
 CONTAINER_TOOL ?= podman
 KUSTOMIZE ?= kubectl kustomize
 KUBECTL ?= kubectl

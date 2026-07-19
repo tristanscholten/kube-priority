@@ -1,8 +1,9 @@
+{{- if .Values.certManager.enabled }}
 apiVersion: cert-manager.io/v1
 kind: Issuer
 metadata:
   name: kube-priority-selfsigned
-  namespace: kube-priority-system
+  namespace: {{ include "kube-priority.namespace" . }}
 spec:
   selfSigned: {}
 ---
@@ -10,12 +11,13 @@ apiVersion: cert-manager.io/v1
 kind: Certificate
 metadata:
   name: kube-priority-serving-cert
-  namespace: kube-priority-system
+  namespace: {{ include "kube-priority.namespace" . }}
 spec:
   secretName: kube-priority-webhook-server-cert
   dnsNames:
-    - kube-priority-webhook.kube-priority-system.svc
-    - kube-priority-webhook.kube-priority-system.svc.cluster.local
+    - kube-priority-webhook.{{ include "kube-priority.namespace" . }}.svc
+    - kube-priority-webhook.{{ include "kube-priority.namespace" . }}.svc.cluster.local
   issuerRef:
     name: kube-priority-selfsigned
     kind: Issuer
+{{- end }}

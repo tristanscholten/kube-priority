@@ -1,9 +1,9 @@
 apiVersion: admissionregistration.k8s.io/v1
 kind: MutatingWebhookConfiguration
 metadata:
-  name: kube-priority-manager-mutating
+  name: kube-priority-mutating
   annotations:
-    cert-manager.io/inject-ca-from: {{ include "kube-priority-manager.namespace" . }}/kube-priority-manager-serving-cert
+    cert-manager.io/inject-ca-from: {{ include "kube-priority.namespace" . }}/kube-priority-serving-cert
 webhooks:
   - name: mutate.kube-priority.hstr.nl
     admissionReviewVersions: ["v1"]
@@ -13,15 +13,15 @@ webhooks:
     reinvocationPolicy: IfNeeded
     clientConfig:
       service:
-        namespace: {{ include "kube-priority-manager.namespace" . }}
-        name: kube-priority-manager-webhook
+        namespace: {{ include "kube-priority.namespace" . }}
+        name: kube-priority-webhook
         path: /mutate
         port: 443
     namespaceSelector:
       matchExpressions:
         - key: kubernetes.io/metadata.name
           operator: NotIn
-          values: ["kube-system", {{ include "kube-priority-manager.namespace" . | quote }}]
+          values: ["kube-system", {{ include "kube-priority.namespace" . | quote }}]
     rules:
       - operations: ["CREATE", "UPDATE"]
         apiGroups: [""]
@@ -39,9 +39,9 @@ webhooks:
 apiVersion: admissionregistration.k8s.io/v1
 kind: ValidatingWebhookConfiguration
 metadata:
-  name: kube-priority-manager-validating
+  name: kube-priority-validating
   annotations:
-    cert-manager.io/inject-ca-from: {{ include "kube-priority-manager.namespace" . }}/kube-priority-manager-serving-cert
+    cert-manager.io/inject-ca-from: {{ include "kube-priority.namespace" . }}/kube-priority-serving-cert
 webhooks:
   - name: validate.kube-priority.hstr.nl
     admissionReviewVersions: ["v1"]
@@ -50,15 +50,15 @@ webhooks:
     failurePolicy: {{ .Values.manager.webhookFailurePolicy }}
     clientConfig:
       service:
-        namespace: {{ include "kube-priority-manager.namespace" . }}
-        name: kube-priority-manager-webhook
+        namespace: {{ include "kube-priority.namespace" . }}
+        name: kube-priority-webhook
         path: /validate
         port: 443
     namespaceSelector:
       matchExpressions:
         - key: kubernetes.io/metadata.name
           operator: NotIn
-          values: ["kube-system", {{ include "kube-priority-manager.namespace" . | quote }}]
+          values: ["kube-system", {{ include "kube-priority.namespace" . | quote }}]
     rules:
       - operations: ["CREATE", "UPDATE"]
         apiGroups: [""]

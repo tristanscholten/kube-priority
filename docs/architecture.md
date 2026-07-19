@@ -1,6 +1,6 @@
 # Architecture
 
-kube-priority-manager has four main pieces:
+kube-priority has four main pieces:
 
 1. **Annotation parser** — validates `kube-priority.hstr.nl` as strict base-10 int32 with hard upper bound `< 1000000000`.
 2. **PriorityClass namer/provisioner** — maps values to deterministic names such as `kube-priority-hstr-nl-neg-10`.

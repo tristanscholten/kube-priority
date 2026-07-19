@@ -1,13 +1,13 @@
 apiVersion: v1
 kind: Service
 metadata:
-  name: kube-priority-manager-webhook
-  namespace: kube-priority-manager-system
+  name: kube-priority-webhook
+  namespace: kube-priority-system
   labels:
-    app.kubernetes.io/name: kube-priority-manager
+    app.kubernetes.io/name: kube-priority
 spec:
   selector:
-    app.kubernetes.io/name: kube-priority-manager
+    app.kubernetes.io/name: kube-priority
   ports:
     - name: webhook
       port: 443
@@ -16,13 +16,13 @@ spec:
 apiVersion: v1
 kind: Service
 metadata:
-  name: kube-priority-manager-metrics
-  namespace: kube-priority-manager-system
+  name: kube-priority-metrics
+  namespace: kube-priority-system
   labels:
-    app.kubernetes.io/name: kube-priority-manager
+    app.kubernetes.io/name: kube-priority
 spec:
   selector:
-    app.kubernetes.io/name: kube-priority-manager
+    app.kubernetes.io/name: kube-priority
   ports:
     - name: metrics
       port: 8080

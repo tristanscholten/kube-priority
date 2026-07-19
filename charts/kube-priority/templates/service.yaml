@@ -1,0 +1,19 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: kube-priority-webhook
+  namespace: {{ include "kube-priority.namespace" . }}
+spec:
+  selector: { app.kubernetes.io/name: kube-priority }
+  ports:
+    - { name: webhook, port: 443, targetPort: webhook }
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: kube-priority-metrics
+  namespace: {{ include "kube-priority.namespace" . }}
+spec:
+  selector: { app.kubernetes.io/name: kube-priority }
+  ports:
+    - { name: metrics, port: 8080, targetPort: metrics }

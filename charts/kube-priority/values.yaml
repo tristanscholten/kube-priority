@@ -1,6 +1,6 @@
 replicaCount: 2
 image:
-  repository: ghcr.io/tristanscholten/kube-priority-manager
+  repository: ghcr.io/tristanscholten/kube-priority
   tag: latest
   pullPolicy: IfNotPresent
 manager:
@@ -13,7 +13,7 @@ manager:
   enablePriorityClassGC: false
   priorityClassGCGracePeriod: 24h
   webhookFailurePolicy: Fail
-  excludedNamespaces: kube-system,kube-priority-manager-system
+  excludedNamespaces: kube-system,kube-priority-system
 resources:
   requests:
     cpu: 20m

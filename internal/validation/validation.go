@@ -3,10 +3,10 @@ package validation
 import (
 	"fmt"
 
-	"github.com/tristanscholten/kube-priority-manager/internal/annotation"
-	"github.com/tristanscholten/kube-priority-manager/internal/config"
-	"github.com/tristanscholten/kube-priority-manager/internal/priorityclass"
-	"github.com/tristanscholten/kube-priority-manager/internal/resource"
+	"github.com/tristanscholten/kube-priority/internal/annotation"
+	"github.com/tristanscholten/kube-priority/internal/config"
+	"github.com/tristanscholten/kube-priority/internal/priorityclass"
+	"github.com/tristanscholten/kube-priority/internal/resource"
 	"k8s.io/apimachinery/pkg/apis/meta/v1/unstructured"
 )
 
