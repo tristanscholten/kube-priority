@@ -25,16 +25,18 @@ func TestKindDeploymentAnnotation(t *testing.T) {
 		img = "kube-priority-manager:local"
 	}
 	if _, err := exec.LookPath("docker"); err == nil {
-		//nolint:gosec // Test harness invokes trusted local docker binary with a test image tag.
-		_ = exec.Command("docker", "build", "-t", img, "../..").Run()
+		run(t, "docker", "build", "-t", img, "../..")
 	}
 	if _, err := exec.LookPath("kind"); err == nil {
-		//nolint:gosec // Test harness invokes trusted local kind binary with a test image tag.
-		_ = exec.Command("kind", "load", "docker-image", img).Run()
+		loadKindImage(t, img)
 	}
 
 	applyKustomizeWithImage(t, img)
-	run(t, "kubectl", "-n", "kube-priority-manager-system", "rollout", "status", "deploy/kube-priority-manager", "--timeout=180s")
+	rollout := exec.Command("kubectl", "-n", "kube-priority-manager-system", "rollout", "status", "deploy/kube-priority-manager", "--timeout=180s")
+	if out, err := rollout.CombinedOutput(); err != nil {
+		dumpDebug(t)
+		t.Fatalf("rollout: %v\n%s", err, out)
+	}
 
 	manifest := `apiVersion: apps/v1
 kind: Deployment
@@ -67,6 +69,37 @@ spec:
 		time.Sleep(2 * time.Second)
 	}
 	t.Fatalf("priorityClassName not set")
+}
+
+func loadKindImage(t *testing.T, img string) {
+	t.Helper()
+	cluster := os.Getenv("E2E_KIND_CLUSTER")
+	if cluster == "" {
+		//nolint:gosec // Test harness invokes trusted local kind binary.
+		out, err := exec.Command("kind", "get", "clusters").CombinedOutput()
+		if err != nil {
+			t.Fatalf("kind get clusters: %v\n%s", err, out)
+		}
+		clusters := strings.Fields(string(out))
+		if len(clusters) == 0 {
+			t.Fatalf("kind installed but no clusters found")
+		}
+		cluster = clusters[0]
+	}
+	run(t, "kind", "load", "docker-image", "--name", cluster, img)
+}
+
+func dumpDebug(t *testing.T) {
+	t.Helper()
+	for _, args := range [][]string{
+		{"-n", "kube-priority-manager-system", "get", "pods,deploy,rs,svc,secret,cert,issuer", "-o", "wide"},
+		{"-n", "kube-priority-manager-system", "get", "events", "--sort-by=.lastTimestamp"},
+		{"-n", "kube-priority-manager-system", "logs", "deploy/kube-priority-manager", "--all-containers=true", "--tail=100"},
+	} {
+		//nolint:gosec // Test debug helper invokes trusted local kubectl binary with fixed commands.
+		out, _ := exec.Command("kubectl", args...).CombinedOutput()
+		t.Logf("kubectl %s\n%s", strings.Join(args, " "), out)
+	}
 }
 
 func applyKustomizeWithImage(t *testing.T, img string) {
